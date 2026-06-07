@@ -1,0 +1,312 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Fonts ── */
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('https://assets.website-files.com/6009ec8cda7f305645c9d91b/60176f9bb43e36419997ecfe_PPNeueMontreal-Book.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('https://assets.website-files.com/6009ec8cda7f305645c9d91b/60176f9b39c5673e51a86f5a_PPNeueMontreal-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Mondwest';
+  src: url('/PPMondwest-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+html { scroll-behavior: smooth; cursor: none; }
+
+body {
+  font-family: 'PP Neue Montreal', system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #051A24;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+a, button { cursor: none; }
+
+/* ── Marquee ── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 30s linear infinite; }
+@media (max-width: 768px) { .animate-marquee { animation-duration: 18s; } }
+
+/* ── Fade-in-up ── */
+@keyframes fadeInUp {
+  0%   { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+/* ── Float ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-12px) rotate(1deg); }
+  66%       { transform: translateY(-6px) rotate(-0.5deg); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* ── Pulse glow ── */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 10px currentColor; }
+  50%       { opacity: 1;   box-shadow: 0 0 30px currentColor, 0 0 60px currentColor; }
+}
+.animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+
+/* ── Shimmer text ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.shimmer-text {
+  background: linear-gradient(90deg, #051A24 40%, #00ffa3 50%, #051A24 60%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Scanline overlay ── */
+@keyframes scan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.scanline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 50%, rgba(0,255,163,0.02) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Noise grain ── */
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.glass-dark {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(5, 26, 36, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-white {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(246, 252, 255, 0.85);
+  border: 1px solid rgba(5, 26, 36, 0.06);
+}
+
+/* ── Shadows ── */
+.shadow-primary {
+  box-shadow:
+    0 1px 2px rgba(5,26,36,0.10),
+    0 4px 4px rgba(5,26,36,0.09),
+    0 9px 6px rgba(5,26,36,0.05),
+    0 17px 7px rgba(5,26,36,0.01),
+    0 26px 7px rgba(5,26,36,0),
+    inset 0 2px 8px rgba(255,255,255,0.5);
+}
+.shadow-secondary {
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.05), 0 4px 30px rgba(0,0,0,0.08);
+}
+.shadow-soft { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+.shadow-glow-green { box-shadow: 0 0 20px rgba(0,255,163,0.25), 0 0 60px rgba(0,255,163,0.08); }
+.shadow-glow-blue  { box-shadow: 0 0 20px rgba(0,170,255,0.25), 0 0 60px rgba(0,170,255,0.08); }
+
+/* ── Gradient borders ── */
+.border-gradient-green {
+  position: relative;
+  border-radius: inherit;
+}
+.border-gradient-green::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(0,255,163,0.4), transparent 60%);
+  z-index: -1;
+}
+
+/* ── 3D perspective card ── */
+.card-3d {
+  transition: transform 0.1s ease-out, box-shadow 0.3s;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.card-3d:hover { box-shadow: 0 30px 80px rgba(0,0,0,0.15), 0 8px 30px rgba(0,0,0,0.1); }
+
+/* ── Neon accent line ── */
+.neon-line {
+  position: relative;
+}
+.neon-line::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #00ffa3, #0af);
+  box-shadow: 0 0 8px #00ffa3;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.neon-line:hover::after { transform: scaleX(1); }
+
+/* ── Hero gradient ── */
+.hero-gradient {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,255,163,0.07) 0%, transparent 70%),
+              linear-gradient(180deg, #051A24 0%, #0a2535 100%);
+}
+
+/* ── Section divider ── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(5,26,36,0.08), transparent);
+}
+
+/* ── Magnetic button ── */
+.magnetic {
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ── Typing cursor blink ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* ── Data stream animation ── */
+@keyframes dataStream {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+/* ── Orbit ── */
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+}
+.animate-orbit { animation: orbit 8s linear infinite; }
+
+/* ── Glow pulse for accent elements ── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(0,255,163,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(0,255,163,0.6), 0 0 40px rgba(0,255,163,0.2); }
+}
+.glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+
+/* ── Terminal cursor ── */
+@keyframes terminalBlink {
+  0%, 49% { background: #00ffa3; }
+  50%, 100% { background: transparent; }
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  vertical-align: middle;
+  animation: terminalBlink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* ── Reveal line ── */
+@keyframes revealLine {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0); }
+}
+
+/* ── Counter spin ── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 12s linear infinite; }
+
+/* ── Text reveal clip (used by masked heading reveals) ── */
+@keyframes clipReveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0%   0 0); }
+}
+
+/* ── Flow arrow pulse ── */
+@keyframes flowArrow {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50%       { transform: translateX(4px); opacity: 1; }
+}
+.flow-arrow { animation: flowArrow 1.4s ease-in-out infinite; }
+
+/* ── Depth card on scroll ── */
+.depth-card {
+  transform-style: preserve-3d;
+  transition: transform 0.12s ease-out;
+  will-change: transform;
+}
+
+/* ── Lenis smooth scroll reset ── */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* ── 3D perspective section wrapper ── */
+.section-3d {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+
+/* ── Neon text ── */
+.neon-green {
+  color: #00ffa3;
+  text-shadow: 0 0 20px rgba(0,255,163,0.5), 0 0 40px rgba(0,255,163,0.2);
+}
+.neon-blue {
+  color: #0af;
+  text-shadow: 0 0 20px rgba(0,170,255,0.5), 0 0 40px rgba(0,170,255,0.2);
+}
