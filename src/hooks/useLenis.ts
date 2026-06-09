@@ -4,11 +4,11 @@ import Lenis from 'lenis'
 export function useLenis() {
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.4,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 0.85,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
       smoothWheel: true,
-      wheelMultiplier: 0.9,
-      touchMultiplier: 1.8,
+      wheelMultiplier: 0.85,
+      touchMultiplier: 1.2,
     })
 
     let raf = 0

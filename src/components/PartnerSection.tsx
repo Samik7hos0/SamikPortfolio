@@ -44,7 +44,7 @@ function CopyToast({ visible }: { visible: boolean }) {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00ffa3" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          <span className="font-mono text-xs" style={{ color: '#00ffa3' }}>Email copied to clipboard</span>
+          <span className="font-mono text-xs" style={{ color: '#00ffa3' }}>Email copied</span>
         </motion.div>
       )}
     </AnimatePresence>
@@ -58,7 +58,7 @@ export default function PartnerSection() {
 
   const handleMove = useCallback((e: React.MouseEvent) => {
     const now = Date.now()
-    if (now - lastSpawn.current < 70) return
+    if (now - lastSpawn.current < 80) return
     lastSpawn.current = now
     const container = containerRef.current
     if (!container) return
@@ -72,20 +72,18 @@ export default function PartnerSection() {
     el.textContent = tag
     el.style.cssText = `
       position:absolute; left:${x}px; top:${y}px;
-      transform: translate(-50%,-50%) rotate(${(Math.random()*20-10).toFixed(1)}deg) scale(1);
-      font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500;
-      color:${color}; background:rgba(5,26,36,0.9); padding:5px 12px; border-radius:9999px;
-      border:1px solid ${color}40; box-shadow:0 4px 20px rgba(0,0,0,0.3), 0 0 10px ${color}30;
-      pointer-events:none; opacity:1; z-index:5;
-      transition:opacity 0.9s ease, transform 0.9s ease;
-      backdrop-filter:blur(8px);
+      transform: translate(-50%,-50%) scale(1);
+      font-family:'JetBrains Mono',monospace; font-size:11px;
+      color:${color}; background:rgba(5,26,36,0.9); padding:4px 10px; border-radius:9999px;
+      border:1px solid ${color}40; pointer-events:none; opacity:1; z-index:5;
+      transition:opacity 0.8s ease, transform 0.8s ease;
     `
     container.appendChild(el)
     requestAnimationFrame(() => {
       el.style.opacity = '0'
-      el.style.transform = `translate(-50%,-80%) rotate(${(Math.random()*30-15).toFixed(1)}deg) scale(0.65)`
+      el.style.transform = `translate(-50%,-80%) scale(0.7)`
     })
-    setTimeout(() => el.remove(), 1000)
+    setTimeout(() => el.remove(), 900)
   }, [])
 
   const copyEmail = () => {
@@ -96,16 +94,16 @@ export default function PartnerSection() {
   }
 
   return (
-    <section id="contact" className="w-full py-12 px-6">
+    <section id="contact" className="w-full py-8 sm:py-12 px-4 sm:px-6">
       <CopyToast visible={copied} />
 
       <div
         ref={containerRef}
         onMouseMove={handleMove}
-        className="relative rounded-[44px] md:rounded-[56px] overflow-hidden"
+        className="relative rounded-[32px] sm:rounded-[44px] md:rounded-[56px] overflow-hidden"
         style={{
           background: 'linear-gradient(160deg, #051A24 0%, #071e2b 60%, #051A24 100%)',
-          minHeight: 560,
+          minHeight: 480,
           border: '1px solid rgba(0,255,163,0.1)',
           boxShadow: '0 60px 120px rgba(0,0,0,0.3)',
         }}
@@ -118,32 +116,32 @@ export default function PartnerSection() {
             backgroundSize: '60px 60px',
           }}
         />
-        {/* Radial glow */}
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse 55% 55% at 50% 55%, rgba(0,255,163,0.07) 0%, transparent 70%)' }} />
 
-        {/* Orbit rings */}
-        <OrbitRing radius={130} speed={14} color="#00ffa3" delay={0} />
-        <OrbitRing radius={210} speed={22} color="#0af" delay={4} />
-        <OrbitRing radius={300} speed={32} color="#ffaa44" delay={8} />
+        {/* Orbit rings — hidden on small screens for perf */}
+        <div className="hidden sm:block">
+          <OrbitRing radius={110} speed={14} color="#00ffa3" delay={0} />
+          <OrbitRing radius={190} speed={22} color="#0af" delay={4} />
+          <OrbitRing radius={270} speed={32} color="#ffaa44" delay={8} />
+        </div>
 
-        {/* Top accent */}
         <div className="absolute top-0 left-0 right-0 h-[1px]"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,163,0.5), transparent)' }} />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center py-24 px-6">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center py-16 sm:py-24 px-5 sm:px-8">
           {/* Status badge */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="flex items-center gap-2 mb-8 rounded-full px-4 py-1.5"
+            className="flex items-center gap-2 mb-7 rounded-full px-4 py-1.5"
             style={{ background: 'rgba(0,255,163,0.08)', border: '1px solid rgba(0,255,163,0.2)' }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#00ffa3] animate-pulse" />
-            <span className="font-mono text-[11px] tracking-widest" style={{ color: 'rgba(0,255,163,0.8)' }}>
+            <span className="font-mono text-[10px] tracking-widest" style={{ color: 'rgba(0,255,163,0.8)' }}>
               OPEN TO WORK · BANGALORE
             </span>
           </motion.div>
@@ -155,7 +153,7 @@ export default function PartnerSection() {
               whileInView={{ y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
-              className="font-serif text-[52px] md:text-[72px] lg:text-[96px] leading-none mb-3"
+              className="font-serif text-[48px] sm:text-[64px] md:text-[80px] lg:text-[96px] leading-none mb-4"
               style={{ color: '#F6FCFF' }}
             >
               Let's{' '}
@@ -165,18 +163,18 @@ export default function PartnerSection() {
             </motion.h2>
           </div>
 
-          {/* Email address — large, prominent, clickable */}
+          {/* Email */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mb-10"
+            className="mb-9"
           >
             <a
               href={`mailto:${EMAIL}`}
-              className="group font-mono text-base md:text-xl relative"
-              style={{ color: 'rgba(224,235,240,0.55)' }}
+              className="group font-mono text-sm sm:text-base md:text-lg relative"
+              style={{ color: 'rgba(224,235,240,0.5)' }}
             >
               <span className="group-hover:text-[#00ffa3] transition-colors duration-300">
                 {EMAIL}
@@ -188,9 +186,9 @@ export default function PartnerSection() {
             </a>
           </motion.div>
 
-          {/* Action buttons */}
+          {/* CTA buttons */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.94 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -199,30 +197,25 @@ export default function PartnerSection() {
             {/* Primary CTA */}
             <a
               href={`mailto:${EMAIL}`}
-              className="inline-flex items-center gap-3 rounded-full pl-3 pr-6 py-2.5 transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+              className="inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
               style={{
-                background: 'rgba(246,252,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 0 30px rgba(0,255,163,0.08)',
+                background: '#00ffa3',
+                color: '#051A24',
+                boxShadow: '0 0 30px rgba(0,255,163,0.3)',
               }}
             >
-              <span
-                className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-base flex-shrink-0"
-                style={{ background: '#00ffa3', color: '#051A24', boxShadow: '0 0 18px rgba(0,255,163,0.5)' }}
-              >
-                SS
-              </span>
-              <span className="text-sm font-medium" style={{ color: '#F6FCFF' }}>
-                Start a conversation
-              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              Send me an email
             </a>
 
-            {/* Copy email button */}
+            {/* Copy email */}
             <button
               onClick={copyEmail}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-mono transition-all duration-200 hover:bg-white/5 active:scale-[0.97]"
-              style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(224,235,240,0.55)' }}
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-mono transition-all duration-200 hover:bg-white/5 active:scale-[0.97]"
+              style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(224,235,240,0.6)' }}
             >
               <AnimatePresence mode="wait">
                 {copied ? (
@@ -250,12 +243,12 @@ export default function PartnerSection() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex gap-8 mt-10"
+            className="flex gap-6 sm:gap-8 mt-9"
           >
             {[
               { href: 'https://github.com/Samik7hos0', label: 'GitHub' },
               { href: 'https://www.linkedin.com/in/samik-sengupta', label: 'LinkedIn' },
-              { href: `/resume/Samik_Sengupta_Data_Engineer_Resume.pdf`, label: 'Resume ↗', external: true },
+              { href: '/resume/Samik_Sengupta_Data_Engineer_Resume.pdf', label: 'Resume ↗', external: true },
             ].map(({ href, label, external }) => (
               <a
                 key={label}

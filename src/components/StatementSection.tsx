@@ -1,15 +1,26 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 
-const TECH_ORBS = [
-  { label: 'Kafka', color: '#0af' },
-  { label: 'Spark', color: '#ff8c42' },
-  { label: 'Snowflake', color: '#29b5e8' },
-  { label: 'Airflow', color: '#00d6a3' },
-  { label: 'dbt', color: '#ffaa44' },
+const PRINCIPLES = [
+  {
+    label: 'Build first, read second',
+    body: 'Every tool I list on this portfolio — Kafka, Spark, dbt, Airflow — I used in a working, Dockerised system before I called myself proficient. No tutorial trophies.',
+    accent: '#00ffa3',
+    icon: '01',
+  },
+  {
+    label: 'Production standards from day one',
+    body: 'Env-var secrets, git-filter-repo to purge leaked credentials, health checks on every service, idempotent DAGs. I build like the code will go to prod, because it should.',
+    accent: '#0af',
+    icon: '02',
+  },
+  {
+    label: 'Data quality is the product',
+    body: 'A pipeline that runs but delivers wrong numbers is worse than no pipeline. RAW → STAGING → MARTS in dbt exists because untested data destroys trust.',
+    accent: '#ffaa44',
+    icon: '03',
+  },
 ]
 
-// Masked text reveal
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -25,139 +36,11 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   )
 }
 
-function PipelineCard() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const mouse = useRef({ x: 0, y: 0 })
-  const current = useRef({ rx: 0, ry: 0 })
-
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], [-40, 40])
-
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 2200)
-    return () => clearInterval(id)
-  }, [])
-
-  const statuses = [
-    { text: 'verified ✓',   color: '#00ffa3' },
-    { text: 'streaming ◉',  color: '#0af' },
-    { text: 'synced ✓',     color: '#ffaa44' },
-    { text: 'running ◉',    color: '#ff8c42' },
-  ]
-
-  // Mouse-reactive 3D tilt
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const card = cardRef.current
-      if (!card) return
-      const rect = card.getBoundingClientRect()
-      mouse.current = {
-        x: ((e.clientX - rect.left) / rect.width  - 0.5) * 2,
-        y: ((e.clientY - rect.top)  / rect.height - 0.5) * 2,
-      }
-    }
-    const onLeave = () => { mouse.current = { x: 0, y: 0 } }
-    const card = cardRef.current
-    card?.addEventListener('mousemove', onMove)
-    card?.addEventListener('mouseleave', onLeave)
-    return () => {
-      card?.removeEventListener('mousemove', onMove)
-      card?.removeEventListener('mouseleave', onLeave)
-    }
-  }, [])
-
-  useEffect(() => {
-    let raf = 0
-    const tick = () => {
-      const card = cardRef.current
-      if (!card) { raf = requestAnimationFrame(tick); return }
-      current.current.rx += (mouse.current.y * -12 - current.current.rx) * 0.06
-      current.current.ry += (mouse.current.x *  16 - current.current.ry) * 0.06
-      card.style.transform = `perspective(900px) rotateX(${current.current.rx}deg) rotateY(${current.current.ry}deg)`
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
-  const status = statuses[tick % statuses.length]
-
-  return (
-    <div ref={sectionRef} className="w-full max-w-xs mx-auto mt-14">
-      <motion.div style={{ y }}>
-        <div
-          ref={cardRef}
-          className="rounded-[28px] overflow-hidden relative"
-          style={{
-            background: '#051A24',
-            border: '1px solid rgba(0,255,163,0.15)',
-            boxShadow: '0 0 60px rgba(0,255,163,0.08), 0 40px 80px rgba(0,0,0,0.18)',
-            willChange: 'transform',
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {/* Shine layer */}
-          <div className="absolute inset-0 pointer-events-none z-10"
-            style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,255,163,0.04), transparent)' }} />
-
-          {/* Top accent */}
-          <div className="absolute top-0 left-0 right-0 h-[1px]"
-            style={{ background: 'linear-gradient(90deg, transparent, #00ffa3, transparent)' }} />
-
-          <div className="aspect-[4/5] flex flex-col items-center justify-center gap-4 p-8 text-center">
-            {/* Terminal titlebar */}
-            <div className="w-full flex items-center gap-1.5 mb-1">
-              {['bg-red-400/50', 'bg-yellow-400/50', 'bg-[#00ffa3]/50'].map(c => (
-                <div key={c} className={`w-2.5 h-2.5 rounded-full ${c}`} />
-              ))}
-              <span className="ml-2 font-mono text-[10px]" style={{ color: 'rgba(224,235,240,0.25)' }}>
-                pipeline.sh
-              </span>
-            </div>
-
-            <span className="font-mono text-[11px] tracking-widest" style={{ color: 'rgba(0,255,163,0.65)' }}>
-              // pipeline.status
-            </span>
-
-            <motion.div
-              key={tick}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4 }}
-              className="font-serif text-3xl"
-              style={{ color: status.color, textShadow: `0 0 20px ${status.color}60` }}
-            >
-              {status.text}
-            </motion.div>
-
-            <span className="font-mono text-[10px]" style={{ color: 'rgba(224,235,240,0.35)' }}>
-              end-to-end · 4 symbols · 30s batch
-            </span>
-
-            {/* Fake terminal lines */}
-            <div className="w-full mt-2 space-y-1.5">
-              {['kafka_producer.send(tick)', 'spark.readStream().foreachBatch()', 'dbt.run("--models marts")'].map((l, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="font-mono text-[10px]" style={{ color: 'rgba(0,255,163,0.38)' }}>›</span>
-                  <span className="font-mono text-[10px] text-left" style={{ color: 'rgba(224,235,240,0.3)' }}>{l}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
 export default function StatementSection() {
   return (
-    <section className="py-20 px-6 overflow-hidden" id="about">
-      <div className="max-w-3xl mx-auto">
-        {/* Section label */}
+    <section className="py-20 px-6 overflow-hidden">
+      <div className="max-w-[1200px] mx-auto">
+        {/* Label */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -165,61 +48,111 @@ export default function StatementSection() {
           transition={{ duration: 0.6 }}
           className="flex items-center gap-3 mb-12"
         >
-          <div className="w-5 h-[1px] bg-[#051A24]/30" />
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(5,26,36,0.45)' }}>
+          <div className="w-5 h-[1px]" style={{ background: 'var(--border-mid)' }} />
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'var(--fg-45)' }}>
             Philosophy
           </span>
         </motion.div>
 
-        {/* Quote — masked reveal */}
-        <div className="relative mb-6">
-          <span className="absolute -top-4 -left-2 font-serif text-[80px] leading-none select-none"
-            style={{ color: 'rgba(5,26,36,0.05)' }}>
-            "
-          </span>
-          <Reveal>
-            <h2
-              className="font-sans text-[28px] md:text-[38px] lg:text-[44px] leading-[1.15] tracking-tight"
-              style={{ color: '#0D212C' }}
+        {/* Quote */}
+        <div className="max-w-3xl mb-16">
+          <div className="relative mb-4">
+            <span
+              className="absolute -top-6 -left-2 font-serif text-[80px] leading-none select-none pointer-events-none"
+              style={{ color: 'var(--fg-08)' }}
             >
-              I learn by building systems that{' '}
-              <span className="font-serif" style={{ fontStyle: 'italic' }}>actually run</span>{' '}
-              — not by collecting tutorials.
-            </h2>
-          </Reveal>
+              "
+            </span>
+            <Reveal>
+              <h2
+                className="font-sans text-[26px] sm:text-[34px] md:text-[42px] lg:text-[48px] leading-[1.12] tracking-tight"
+                style={{ color: 'var(--fg-mid)' }}
+              >
+                I learn by building systems that{' '}
+                <span className="font-serif italic" style={{ color: 'var(--fg)' }}>actually run</span>
+                {' '}— not by collecting tutorials.
+              </h2>
+            </Reveal>
+          </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="italic text-sm"
+            style={{ color: 'var(--fg-38)' }}
+          >
+            — Samik Sengupta
+          </motion.p>
         </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="italic text-sm mb-14"
-          style={{ color: 'rgba(5,26,36,0.4)' }}
-        >
-          — Samik Sengupta
-        </motion.p>
-
-        {/* Tech orbs */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          {TECH_ORBS.map(({ label, color }, i) => (
+        {/* Principles grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {PRINCIPLES.map((p, i) => (
             <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 16 }}
+              key={p.icon}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.05 + i * 0.07 }}
-              className="flex items-center gap-2 rounded-full px-4 py-2"
-              style={{ background: `${color}0e`, border: `1px solid ${color}28` }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
+              className="rounded-2xl p-6 relative overflow-hidden"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--card-border)',
+                boxShadow: 'var(--card-shadow)',
+              }}
             >
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
-              <span className="font-serif text-lg font-medium" style={{ color: '#051A24' }}>{label}</span>
+              <div
+                className="absolute top-0 left-0 right-0 h-[2px]"
+                style={{ background: `linear-gradient(90deg, ${p.accent}, transparent)` }}
+              />
+              <span
+                className="font-mono text-[11px] font-semibold mb-4 block"
+                style={{ color: p.accent }}
+              >
+                {p.icon}
+              </span>
+              <h3 className="font-medium text-base mb-3" style={{ color: 'var(--fg)' }}>
+                {p.label}
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-60)' }}>
+                {p.body}
+              </p>
             </motion.div>
           ))}
         </div>
 
-        {/* 3D mouse-reactive pipeline card */}
-        <PipelineCard />
+        {/* Recruiter callout — intentionally always dark */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="mt-10 rounded-2xl px-7 py-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8"
+          style={{
+            background: '#051A24',
+            border: '1px solid rgba(0,255,163,0.12)',
+          }}
+        >
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#00ffa3] animate-pulse" />
+            <span className="font-mono text-[11px] tracking-widest" style={{ color: '#00ffa3' }}>
+              FOR RECRUITERS
+            </span>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(224,235,240,0.65)' }}>
+            Two end-to-end pipelines shipped and public on GitHub. dbt Fundamentals certified.
+            Currently a Trainee DE at Kinaxs. Targeting a Junior / Associate Data Engineer role in
+            Bangalore at <span style={{ color: '#F6FCFF' }}>12–14 LPA</span>.
+          </p>
+          <a
+            href="#contact"
+            className="shrink-0 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-xs font-semibold transition-all duration-200 hover:brightness-110 active:scale-95 whitespace-nowrap"
+            style={{ background: '#00ffa3', color: '#051A24' }}
+          >
+            Get in touch →
+          </a>
+        </motion.div>
       </div>
     </section>
   )

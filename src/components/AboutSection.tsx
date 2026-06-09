@@ -59,13 +59,13 @@ function TimelineItem({ item, index }: { item: typeof TIMELINE[0]; index: number
           style={{ background: item.color, boxShadow: `0 0 10px ${item.color}80` }}
         />
         {index < TIMELINE.length - 1 && (
-          <div className="flex-1 w-[1px] mt-1" style={{ background: 'rgba(5,26,36,0.12)' }} />
+          <div className="flex-1 w-[1px] mt-1" style={{ background: 'var(--border-mid)' }} />
         )}
       </div>
 
       <div className="pb-8">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className="font-medium text-base" style={{ color: '#051A24' }}>{item.phase}</span>
+          <span className="font-medium text-base" style={{ color: 'var(--fg)' }}>{item.phase}</span>
           <span
             className="font-mono text-[10px] px-2 py-0.5 rounded-full"
             style={{ background: `${item.color}12`, color: item.color, border: `1px solid ${item.color}25` }}
@@ -73,7 +73,7 @@ function TimelineItem({ item, index }: { item: typeof TIMELINE[0]; index: number
             {item.tag}
           </span>
         </div>
-        <p className="text-sm leading-relaxed" style={{ color: 'rgba(5,26,36,0.6)' }}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-60)' }}>
           {item.desc}
         </p>
       </div>
@@ -83,7 +83,7 @@ function TimelineItem({ item, index }: { item: typeof TIMELINE[0]; index: number
 
 export default function AboutSection() {
   return (
-    <section id="about-story" className="py-16 px-6">
+    <section id="about" className="py-12 sm:py-16 px-4 sm:px-6">
       <div className="max-w-[1200px] mx-auto">
         {/* Label */}
         <motion.div
@@ -93,8 +93,8 @@ export default function AboutSection() {
           transition={{ duration: 0.6 }}
           className="flex items-center gap-3 mb-12"
         >
-          <div className="w-5 h-[1px] bg-[#051A24]/30" />
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(5,26,36,0.45)' }}>
+          <div className="w-5 h-[1px]" style={{ background: 'var(--border-mid)' }} />
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'var(--fg-45)' }}>
             Journey
           </span>
         </motion.div>
@@ -107,8 +107,8 @@ export default function AboutSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="font-sans text-[28px] md:text-[36px] lg:text-[40px] leading-[1.15] tracking-tight mb-6"
-              style={{ color: '#051A24' }}
+              className="font-sans text-[24px] sm:text-[30px] md:text-[36px] lg:text-[40px] leading-[1.15] tracking-tight mb-6"
+              style={{ color: 'var(--fg)' }}
             >
               From zero to{' '}
               <span className="font-serif">two shipped systems.</span>
@@ -120,7 +120,7 @@ export default function AboutSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.1 }}
               className="space-y-4 text-sm md:text-base leading-relaxed"
-              style={{ color: 'rgba(5,26,36,0.65)' }}
+              style={{ color: 'var(--fg-60)' }}
             >
               <p>
                 I didn't go through a bootcamp or a structured course path. I decided I wanted to
@@ -136,7 +136,7 @@ export default function AboutSection() {
               </p>
             </motion.div>
 
-            {/* Current status card */}
+            {/* Current status card — intentionally always dark */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -158,7 +158,7 @@ export default function AboutSection() {
                 Trainee Data Engineer @ Kinaxs
               </p>
               <p className="font-mono text-xs" style={{ color: 'rgba(224,235,240,0.4)' }}>
-                Dharmanagar → targeting Bangalore
+                Targeting Bangalore
               </p>
             </motion.div>
 
@@ -170,7 +170,7 @@ export default function AboutSection() {
               transition={{ duration: 0.7, delay: 0.3 }}
               className="mt-6"
             >
-              <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'rgba(5,26,36,0.4)' }}>
+              <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--fg-38)' }}>
                 Certifications
               </p>
               <div className="flex flex-wrap gap-3">
@@ -179,9 +179,9 @@ export default function AboutSection() {
                     key={cert.name}
                     className="flex items-center gap-2.5 rounded-xl px-4 py-2.5"
                     style={{
-                      background: '#fff',
-                      border: '1px solid rgba(5,26,36,0.08)',
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                      background: 'var(--card)',
+                      border: '1px solid var(--card-border)',
+                      boxShadow: 'var(--card-shadow)',
                     }}
                   >
                     <div
@@ -191,8 +191,8 @@ export default function AboutSection() {
                       {cert.icon}
                     </div>
                     <div>
-                      <p className="text-xs font-medium" style={{ color: '#051A24' }}>{cert.name}</p>
-                      <p className="font-mono text-[10px]" style={{ color: 'rgba(5,26,36,0.4)' }}>{cert.issuer}</p>
+                      <p className="text-xs font-medium" style={{ color: 'var(--fg)' }}>{cert.name}</p>
+                      <p className="font-mono text-[10px]" style={{ color: 'var(--fg-38)' }}>{cert.issuer}</p>
                     </div>
                   </div>
                 ))}

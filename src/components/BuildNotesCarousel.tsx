@@ -45,8 +45,9 @@ const NOTES: Note[] = [
 export default function BuildNotesCarousel() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const cardWidth = 440
-  const gap = 24
+  const [transitioning, setTransitioning] = useState(true)
+  const cardWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? Math.min(window.innerWidth - 32, 360) : 440
+  const gap = 16
 
   useEffect(() => {
     if (paused) return
@@ -54,16 +55,31 @@ export default function BuildNotesCarousel() {
     return () => clearInterval(id)
   }, [paused])
 
+  // Seamless infinite loop: when we reach the cloned tail, silently jump back
+  useEffect(() => {
+    if (index >= NOTES.length * 2) {
+      const t = setTimeout(() => {
+        setTransitioning(false)
+        setIndex((i) => i - NOTES.length)
+      }, 850)
+      return () => clearTimeout(t)
+    }
+    if (!transitioning) {
+      requestAnimationFrame(() => setTransitioning(true))
+    }
+  }, [index, transitioning])
+
   const tripled = [...NOTES, ...NOTES, ...NOTES]
   const realIndex = index % NOTES.length
 
   return (
     <section
-      className="w-full py-20 overflow-hidden"
+      id="notes"
+      className="w-full py-12 sm:py-20 overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="md:max-w-4xl md:ml-auto px-6 mb-10">
+      <div className="md:max-w-4xl md:ml-auto px-4 sm:px-6 mb-8 sm:mb-10">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -71,8 +87,8 @@ export default function BuildNotesCarousel() {
           transition={{ duration: 0.6 }}
           className="flex items-center gap-3 mb-3"
         >
-          <div className="w-5 h-[1px] bg-[#051A24]/30" />
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(5,26,36,0.45)' }}>
+          <div className="w-5 h-[1px]" style={{ background: 'var(--border-mid)' }} />
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase" style={{ color: 'var(--fg-45)' }}>
             Build Notes
           </span>
         </motion.div>
@@ -83,8 +99,8 @@ export default function BuildNotesCarousel() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="font-sans text-[32px] md:text-[40px] lg:text-[44px] leading-[1.1] tracking-tight"
-            style={{ color: '#0D212C' }}
+            className="font-sans text-[24px] sm:text-[32px] md:text-[40px] lg:text-[44px] leading-[1.1] tracking-tight"
+            style={{ color: 'var(--fg-mid)' }}
           >
             What I learned{' '}
             <span className="font-serif">building</span>
@@ -101,37 +117,37 @@ export default function BuildNotesCarousel() {
                   style={{
                     width: i === realIndex ? 20 : 6,
                     height: 6,
-                    background: i === realIndex ? '#051A24' : 'rgba(5,26,36,0.2)',
+                    background: i === realIndex ? 'var(--fg)' : 'var(--fg-30)',
                   }}
                 />
               ))}
             </div>
             <button
               aria-label="Previous"
-              onClick={() => setIndex((i) => Math.max(0, i - 1))}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-[#051A24]/5 active:scale-95"
-              style={{ border: '1px solid rgba(5,26,36,0.15)' }}
+              onClick={() => setIndex((i) => (i <= 0 ? NOTES.length - 1 : i - 1))}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+              style={{ border: '1px solid var(--border-mid)' }}
             >
-              <ChevronLeft className="w-4 h-4" style={{ color: '#0D212C' }} />
+              <ChevronLeft className="w-4 h-4" style={{ color: 'var(--fg-mid)' }} />
             </button>
             <button
               aria-label="Next"
               onClick={() => setIndex((i) => i + 1)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-[#051A24]/5 active:scale-95"
-              style={{ border: '1px solid rgba(5,26,36,0.15)' }}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+              style={{ border: '1px solid var(--border-mid)' }}
             >
-              <ChevronRight className="w-4 h-4" style={{ color: '#0D212C' }} />
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--fg-mid)' }} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="px-6">
+      <div className="px-4 sm:px-6">
         <div
           className="flex gap-6"
           style={{
-            transform: `translateX(-${(index % NOTES.length) * (cardWidth + gap)}px)`,
-            transition: 'transform 0.85s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: `translateX(-${index * (cardWidth + gap)}px)`,
+            transition: transitioning ? 'transform 0.85s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
           }}
         >
           {tripled.map((note, i) => {
@@ -142,11 +158,11 @@ export default function BuildNotesCarousel() {
                 className="flex-shrink-0 relative rounded-[32px] overflow-hidden"
                 style={{
                   width: `min(${cardWidth}px, calc(100vw - 48px))`,
-                  background: '#fff',
-                  border: isActive ? `1px solid ${note.accent}30` : '1px solid rgba(5,26,36,0.06)',
+                  background: 'var(--card)',
+                  border: isActive ? `1px solid ${note.accent}30` : '1px solid var(--card-border)',
                   boxShadow: isActive
                     ? `0 20px 60px rgba(0,0,0,0.10), 0 0 0 1px ${note.accent}15`
-                    : '0 4px 20px rgba(0,0,0,0.06)',
+                    : 'var(--card-shadow)',
                   transition: 'border-color 0.4s, box-shadow 0.4s',
                 }}
               >
@@ -169,7 +185,7 @@ export default function BuildNotesCarousel() {
                     />
                   </svg>
 
-                  <p className="text-base leading-relaxed" style={{ color: '#0D212C' }}>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--fg-mid)' }}>
                     {note.text}
                   </p>
 
@@ -181,8 +197,8 @@ export default function BuildNotesCarousel() {
                       <span className="font-serif text-base" style={{ color: note.accent }}>SS</span>
                     </div>
                     <div>
-                      <p className="font-medium text-sm" style={{ color: '#0D212C' }}>{note.topic}</p>
-                      <p className="text-xs font-mono mt-0.5" style={{ color: 'rgba(5,26,36,0.4)' }}>
+                      <p className="font-medium text-sm" style={{ color: 'var(--fg-mid)' }}>{note.topic}</p>
+                      <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--fg-38)' }}>
                         → {note.tag}
                       </p>
                     </div>
