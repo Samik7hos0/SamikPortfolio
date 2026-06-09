@@ -1,18 +1,19 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
 interface PipeNode { label: string; role: string; color: string }
 interface Metric    { value: string; label: string }
 
 interface Project {
-  name:        string
-  description: string
-  tag:         string
-  accent:      string
-  href:        string
-  pipeline:    PipeNode[]
-  metrics:     Metric[]
-  type:        'batch' | 'streaming'
+  name:         string
+  description:  string
+  tag:          string
+  accent:       string
+  href:         string
+  pipeline:     PipeNode[]
+  metrics:      Metric[]
+  type:         'batch' | 'streaming'
+  terminalLog:  string[]
 }
 
 const PROJECTS: Project[] = [
@@ -36,6 +37,13 @@ const PROJECTS: Project[] = [
       { value: '3',   label: 'dbt layers'      },
       { value: 'ELT', label: 'Pattern'         },
     ],
+    terminalLog: [
+      "$ airflow dags trigger market_elt_dag",
+      "> [INFO] extract_task: 250 rows from Alpha Vantage API",
+      "> [INFO] dbt run → staging.stg_market_data complete",
+      "> [INFO] dbt run → marts.fct_daily_ohlcv complete",
+      "> [SUCCESS] Loaded to Snowflake ✓  duration=18.4s",
+    ],
   },
   {
     name: 'streaming-pipeline',
@@ -57,8 +65,63 @@ const PROJECTS: Project[] = [
       { value: '4',   label: 'Live symbols' },
       { value: '2',   label: 'Output sinks' },
     ],
+    terminalLog: [
+      "$ spark-submit pyspark_streaming_job.py",
+      "> [INFO] Kafka consumer connected  topic=stock_ticks",
+      "> [INFO] Micro-batch window=30s  records=25  symbols=4",
+      "> [INFO] Writing to S3: s3://market-data/streaming/2024-01-15/",
+      "> [SUCCESS] Snowflake sink flushed ✓  latency=28.1s",
+    ],
   },
 ]
+
+function TerminalLog({ lines, accent }: { lines: string[]; accent: string }) {
+  const [shown, setShown] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          lines.forEach((_, i) => setTimeout(() => setShown(i + 1), i * 380))
+          obs.disconnect()
+        }
+      },
+      { threshold: 0.6 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [lines])
+
+  return (
+    <div
+      ref={ref}
+      className="hidden sm:block border-t px-6 sm:px-8 py-4"
+      style={{
+        borderColor: 'rgba(255,255,255,0.05)',
+        background: 'rgba(0,0,0,0.25)',
+        minHeight: 96,
+      }}
+    >
+      <div className="font-mono text-[10px] space-y-1">
+        {lines.slice(0, shown).map((line, i) => (
+          <div
+            key={i}
+            className="transition-colors duration-300"
+            style={{ color: i === shown - 1 ? accent : 'rgba(224,235,240,0.28)' }}
+          >
+            {line}
+          </div>
+        ))}
+        {shown < lines.length && shown > 0 && (
+          <span className="terminal-cursor" style={{ background: accent }} />
+        )}
+      </div>
+    </div>
+  )
+}
 
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
@@ -78,46 +141,49 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 /* Mini pipeline diagram rendered inside each project card */
 function MiniPipeline({ nodes, accent }: { nodes: PipeNode[]; accent: string }) {
   return (
-    <div className="flex items-center justify-center flex-wrap gap-y-3 gap-x-0 px-6 sm:px-10 w-full">
-      {nodes.map((node, i) => (
-        <div key={node.label} className="flex items-center">
-          {/* Node */}
-          <div
-            className="relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 min-w-[72px] sm:min-w-[84px] text-center"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: `1px solid ${node.color}28`,
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            {/* Top coloured bar */}
-            <div className="absolute top-0 left-2 right-2 h-[2px] rounded-full" style={{ background: node.color }} />
-            <p className="font-serif text-[11px] sm:text-xs font-semibold leading-tight mt-1" style={{ color: '#F6FCFF' }}>
-              {node.label}
-            </p>
-            <p className="font-mono text-[8px] sm:text-[9px]" style={{ color: node.color }}>
-              {node.role}
-            </p>
-          </div>
-
-          {/* Edge arrow */}
-          {i < nodes.length - 1 && (
-            <div className="flex items-center mx-1 sm:mx-1.5">
-              <div
-                className="w-4 sm:w-6 h-[1px]"
-                style={{ background: `linear-gradient(90deg, ${node.color}50, ${nodes[i + 1].color}50)` }}
-              />
-              <div
-                style={{
-                  borderLeft: `5px solid ${nodes[i + 1].color}60`,
-                  borderTop: '3px solid transparent',
-                  borderBottom: '3px solid transparent',
-                }}
-              />
+    /* overflow-x-auto so 5 nodes scroll horizontally on mobile instead of wrapping mid-arrow */
+    <div className="pipeline-scroll-wrap w-full overflow-x-auto scrollbar-none">
+      <div className="flex items-center py-2 w-max mx-auto px-4 sm:px-10">
+        {nodes.map((node, i) => (
+          <div key={node.label} className="flex items-center">
+            {/* Node */}
+            <div
+              className="relative flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-center"
+              style={{
+                minWidth: 76,
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${node.color}28`,
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <div className="absolute top-0 left-2 right-2 h-[2px] rounded-full" style={{ background: node.color }} />
+              <p className="font-serif text-[11px] font-semibold leading-tight mt-1 whitespace-nowrap" style={{ color: '#F6FCFF' }}>
+                {node.label}
+              </p>
+              <p className="font-mono text-[8px] whitespace-nowrap" style={{ color: node.color }}>
+                {node.role}
+              </p>
             </div>
-          )}
-        </div>
-      ))}
+
+            {/* Edge arrow */}
+            {i < nodes.length - 1 && (
+              <div className="flex items-center mx-1.5 shrink-0">
+                <div
+                  className="w-5 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, ${node.color}50, ${nodes[i + 1].color}50)` }}
+                />
+                <div
+                  style={{
+                    borderLeft: `5px solid ${nodes[i + 1].color}60`,
+                    borderTop: '3px solid transparent',
+                    borderBottom: '3px solid transparent',
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -200,7 +266,9 @@ function TiltCard({ project, index }: { project: Project; index: number }) {
         href={project.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full rounded-[24px] overflow-hidden group"
+        data-cursor="VIEW ↗"
+        data-cursor-color="#0af"
+        className="block w-full rounded-[24px] overflow-hidden group active:scale-[0.99]"
         style={{
           transition: 'transform 0.15s ease-out, box-shadow 0.35s',
           transformStyle: 'preserve-3d',
@@ -270,6 +338,9 @@ function TiltCard({ project, index }: { project: Project; index: number }) {
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-8 sm:py-10">
             <MiniPipeline nodes={project.pipeline} accent={project.accent} />
           </div>
+
+          {/* ── Terminal log ── */}
+          <TerminalLog lines={project.terminalLog} accent={project.accent} />
 
           {/* ── Metrics strip ── */}
           <div

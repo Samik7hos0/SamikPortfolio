@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { ThemeProvider } from './context/ThemeContext'
 import { useLenis } from './hooks/useLenis'
+import { useKeyNav } from './hooks/useKeyNav'
 import StatementSection from './components/StatementSection'
 import LookingForSection from './components/LookingForSection'
 import BuildNotesCarousel from './components/BuildNotesCarousel'
@@ -11,6 +12,7 @@ import { Footer, CopyrightBar } from './components/Layout'
 import CustomCursor from './components/CustomCursor'
 import ScrollProgress from './components/ScrollProgress'
 import FloatingNav from './components/FloatingNav'
+import MagneticWrapper from './components/MagneticWrapper'
 import Preloader from './components/Preloader'
 import AboutSection from './components/AboutSection'
 import SkillsSection from './components/SkillsSection'
@@ -61,9 +63,19 @@ function StatCounter({ value, suffix = '', label }: { value: number; suffix?: st
 }
 
 function HeroSection() {
-  const heroRef = useRef<HTMLElement>(null)
+  const heroRef  = useRef<HTMLElement>(null)
+  const glowRef  = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+
+  // Ambient glow follows mouse — direct DOM update, no state
+  const onHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (!glowRef.current) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width)  * 100
+    const y = ((e.clientY - rect.top)  / rect.height) * 100
+    glowRef.current.style.background = `radial-gradient(ellipse 640px 420px at ${x}% ${y}%, rgba(0,255,163,0.065) 0%, transparent 60%)`
+  }
 
   const [typed, setTyped] = useState('')
   const full = 'Data Engineer · Bangalore, India'
@@ -82,11 +94,19 @@ function HeroSection() {
     <section
       ref={heroRef}
       id="hero"
+      onMouseMove={onHeroMouseMove}
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{
         background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,255,163,0.06) 0%, transparent 60%), linear-gradient(180deg, #040f17 0%, #071e2b 100%)',
       }}
     >
+      {/* Mouse-tracked ambient glow */}
+      <div
+        ref={glowRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 640px 420px at 50% 30%, rgba(0,255,163,0.04) 0%, transparent 60%)', transition: 'background 0.15s ease' }}
+      />
+
       {/* Subtle dot grid */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -175,24 +195,32 @@ function HeroSection() {
           {...fadeUp(1.05)}
           className="flex flex-wrap gap-3 justify-center mb-12 sm:mb-14"
         >
-          <a
-            href="#contact"
-            className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] hover:brightness-110"
-            style={{ background: '#00ffa3', color: '#051A24', boxShadow: '0 0 28px rgba(0,255,163,0.28)' }}
-          >
-            Get in touch
-          </a>
-          <a
-            href="#work"
-            className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium transition-all duration-200 active:scale-[0.97] hover:bg-white/8"
-            style={{ border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(224,235,240,0.8)' }}
-          >
-            View projects
-          </a>
+          <MagneticWrapper>
+            <a
+              href="#contact"
+              data-cursor="HIRE →"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] hover:brightness-110"
+              style={{ background: '#00ffa3', color: '#051A24', boxShadow: '0 0 28px rgba(0,255,163,0.28)' }}
+            >
+              Get in touch
+            </a>
+          </MagneticWrapper>
+          <MagneticWrapper>
+            <a
+              href="#work"
+              data-cursor="WORK ↓"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium transition-all duration-200 active:scale-[0.97] hover:bg-white/8"
+              style={{ border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(224,235,240,0.8)' }}
+            >
+              View projects
+            </a>
+          </MagneticWrapper>
           <a
             href="/resume/Samik_Sengupta_Data_Engineer_Resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
+            data-cursor="PDF ↗"
+            data-cursor-color="#ffaa44"
             className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium transition-all duration-200 active:scale-[0.97] hover:bg-white/5"
             style={{ border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(224,235,240,0.45)' }}
           >
@@ -203,15 +231,15 @@ function HeroSection() {
           </a>
         </motion.div>
 
-        {/* Stats row */}
+        {/* Stats row — grid on mobile so it never overflows */}
         <motion.div
           {...fadeUp(1.2)}
-          className="flex items-center gap-8 sm:gap-14 justify-center mb-14 sm:mb-16"
+          className="grid grid-cols-3 gap-2 xs:gap-0 xs:flex xs:items-center xs:gap-10 sm:gap-14 justify-center mb-12 sm:mb-16 w-full max-w-sm xs:max-w-none"
         >
           <StatCounter value={2} label="Systems shipped" />
-          <div className="h-8 w-[1px]" style={{ background: 'rgba(255,255,255,0.07)' }} />
+          <div className="hidden xs:block h-8 w-[1px]" style={{ background: 'rgba(255,255,255,0.07)' }} />
           <StatCounter value={4} label="Live symbols" />
-          <div className="h-8 w-[1px]" style={{ background: 'rgba(255,255,255,0.07)' }} />
+          <div className="hidden xs:block h-8 w-[1px]" style={{ background: 'rgba(255,255,255,0.07)' }} />
           <div>
             <div className="font-mono text-2xl sm:text-3xl font-semibold" style={{ color: '#00ffa3' }}>30s</div>
             <div className="font-mono text-[9px] sm:text-[10px] mt-1 tracking-wider" style={{ color: 'rgba(224,235,240,0.38)' }}>
@@ -273,6 +301,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [touch] = useState(isTouchDevice)
   useLenis()
+  useKeyNav()
 
   return (
     <ThemeProvider>

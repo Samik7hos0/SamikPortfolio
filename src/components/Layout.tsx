@@ -50,7 +50,7 @@ export function Footer() {
           className="font-serif font-semibold whitespace-nowrap leading-none"
           style={{
             fontSize: 'clamp(80px, 18vw, 260px)',
-            color: 'rgba(246,252,255,0.025)',
+            color: 'rgba(246,252,255,0.048)',
             letterSpacing: '-0.03em',
           }}
         >

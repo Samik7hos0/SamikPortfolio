@@ -1,5 +1,6 @@
 import { useRef, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import MagneticWrapper from './MagneticWrapper'
 
 const EMAIL = 'samik.r.gt@gmail.com'
 const TAGS = ['Kafka', 'Spark', 'Airflow', 'dbt', 'Snowflake', 'AWS S3', 'PySpark', 'PostgreSQL', 'Docker', 'Python']
@@ -192,12 +193,14 @@ export default function PartnerSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center gap-3"
+            className="flex flex-col xs:flex-row items-center gap-3 w-full xs:w-auto"
           >
             {/* Primary CTA */}
+            <MagneticWrapper>
             <a
               href={`mailto:${EMAIL}`}
-              className="inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+              data-cursor="EMAIL →"
+              className="w-full xs:w-auto inline-flex items-center justify-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
               style={{
                 background: '#00ffa3',
                 color: '#051A24',
@@ -210,10 +213,12 @@ export default function PartnerSection() {
               </svg>
               Send me an email
             </a>
+            </MagneticWrapper>
 
             {/* Copy email */}
             <button
               onClick={copyEmail}
+              data-cursor="COPY"
               className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-mono transition-all duration-200 hover:bg-white/5 active:scale-[0.97]"
               style={{ border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(224,235,240,0.6)' }}
             >

@@ -362,10 +362,61 @@ html.lenis, html.lenis body {
 /* ── Prevent horizontal overflow ── */
 html, body { max-width: 100vw; overflow-x: hidden; }
 
+/* ── Hide scrollbar utility ── */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ── Mobile touch improvements ── */
+@media (max-width: 767px) {
+  /* Prevent font boosting on Android */
+  * { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  /* Ensure CTA buttons are large enough to tap */
+  a.btn, button[type="button"] { min-height: 44px; }
+
+  /* Smooth momentum scrolling on iOS */
+  [data-scroll], .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+}
+
+/* ── Mobile pipeline scroll fade hint ── */
+.pipeline-scroll-wrap {
+  position: relative;
+}
+.pipeline-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(90deg, transparent, rgba(4,15,23,0.8));
+  pointer-events: none;
+  border-radius: 0 24px 24px 0;
+}
+@media (min-width: 640px) {
+  .pipeline-scroll-wrap::after { display: none; }
+}
+
 /* ── 3D perspective section wrapper ── */
 .section-3d {
   perspective: 1200px;
   perspective-origin: 50% 50%;
+}
+
+/* ── Click ripple ── */
+@keyframes cursorRipple {
+  0%   { width: 0;     height: 0;     opacity: 1; }
+  100% { width: 130px; height: 130px; opacity: 0; }
+}
+.cursor-ripple {
+  position: fixed;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,163,0.5);
+  background: rgba(0,255,163,0.06);
+  pointer-events: none;
+  z-index: 9997;
+  transform: translate(-50%,-50%);
+  animation: cursorRipple 0.65s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 
 /* ── Neon text ── */
