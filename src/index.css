@@ -327,6 +327,15 @@ a, button { cursor: none; }
   will-change: transform;
 }
 
+/* ── Nav scan-line animation ── */
+@keyframes navScan {
+  0%   { left: -40%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 140%; opacity: 0; }
+}
+.nav-scan { animation: navScan 4s ease-in-out infinite; }
+
 /* ── Lenis smooth scroll reset ── */
 html.lenis, html.lenis body {
   height: auto;
