@@ -428,3 +428,41 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   color: #0af;
   text-shadow: 0 0 20px rgba(0,170,255,0.5), 0 0 40px rgba(0,170,255,0.2);
 }
+
+/* ── Keyboard focus visibility ──
+   The site hides the OS cursor (cursor:none), so keyboard users rely entirely
+   on a visible focus ring. Mouse clicks won't show it (:focus-visible only). */
+:focus-visible {
+  outline: 2px solid #00ffa3;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #00ffa3;
+  outline-offset: 3px;
+}
+
+/* ── Reduced motion ──
+   Respect users who ask the OS to minimise animation. Kills marquees, infinite
+   loops, smooth-scroll and transition-driven motion; content stays fully usable. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Stop the marquee, orbits, pulses and float loops entirely */
+  .animate-marquee,
+  .animate-float,
+  .animate-orbit,
+  .animate-spin-slow,
+  .animate-pulse-glow,
+  .glow-pulse,
+  .nav-scan,
+  .shimmer-text { animation: none !important; }
+}

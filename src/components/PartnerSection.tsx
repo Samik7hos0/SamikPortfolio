@@ -88,10 +88,32 @@ export default function PartnerSection() {
   }, [])
 
   const copyEmail = () => {
-    navigator.clipboard.writeText(EMAIL).then(() => {
+    const done = () => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
-    })
+    }
+    // navigator.clipboard is undefined on insecure contexts / older browsers —
+    // fall back to a temporary textarea + execCommand so the button never no-ops.
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(EMAIL).then(done).catch(legacyCopy)
+    } else {
+      legacyCopy()
+    }
+    function legacyCopy() {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = EMAIL
+        ta.style.cssText = 'position:fixed;top:-9999px;opacity:0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        ta.remove()
+        done()
+      } catch {
+        // Last resort: surface the address so the user can copy it manually.
+        window.prompt('Copy this email address:', EMAIL)
+      }
+    }
   }
 
   return (

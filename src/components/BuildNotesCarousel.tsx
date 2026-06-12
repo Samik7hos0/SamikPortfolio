@@ -63,6 +63,8 @@ export default function BuildNotesCarousel() {
 
   useEffect(() => {
     if (paused) return
+    // Don't auto-advance for users who asked the OS to reduce motion (WCAG 2.2.2).
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const id = setInterval(() => setIndex((i) => i + 1), 3500)
     return () => clearInterval(id)
   }, [paused])
@@ -141,6 +143,8 @@ export default function BuildNotesCarousel() {
                 <button
                   key={i}
                   onClick={() => setIndex(i)}
+                  aria-label={`Go to build note ${i + 1}`}
+                  aria-current={i === realIndex}
                   className="rounded-full transition-all duration-300"
                   style={{
                     width: i === realIndex ? 20 : 6,
@@ -176,6 +180,8 @@ export default function BuildNotesCarousel() {
           <button
             key={i}
             onClick={() => setIndex(i)}
+            aria-label={`Go to build note ${i + 1}`}
+            aria-current={i === realIndex}
             className="rounded-full transition-all duration-300"
             style={{
               width: i === realIndex ? 18 : 5,

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence, MotionConfig } from 'framer-motion'
 import { ThemeProvider } from './context/ThemeContext'
 import { useLenis } from './hooks/useLenis'
 import { useKeyNav } from './hooks/useKeyNav'
@@ -81,6 +81,11 @@ function HeroSection() {
   const full = 'Data Engineer · Bangalore, India'
 
   useEffect(() => {
+    // Reduced-motion users get the full line immediately — no typing animation.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setTyped(full)
+      return
+    }
     let i = 0
     const id = setInterval(() => {
       setTyped(full.slice(0, i + 1))
@@ -305,6 +310,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      <MotionConfig reducedMotion="user">
       <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg)' }}>
         <AnimatePresence>{loading && <Preloader onDone={() => setLoading(false)} />}</AnimatePresence>
 
@@ -333,6 +339,7 @@ export default function App() {
         <Footer />
         <CopyrightBar />
       </div>
+      </MotionConfig>
     </ThemeProvider>
   )
 }

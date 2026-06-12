@@ -3,6 +3,9 @@ import Lenis from 'lenis'
 
 export function useLenis() {
   useEffect(() => {
+    // Honour OS "reduce motion" — skip smooth-scroll hijacking entirely.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
     const lenis = new Lenis({
       duration: 0.85,
       easing: (t: number) => 1 - Math.pow(1 - t, 3),

@@ -266,6 +266,7 @@ function TiltCard({ project, index }: { project: Project; index: number }) {
         href={project.href}
         target="_blank"
         rel="noopener noreferrer"
+        aria-label={`View ${project.name} repository on GitHub`}
         data-cursor="VIEW ↗"
         data-cursor-color="#0af"
         className="block w-full rounded-[24px] overflow-hidden group active:scale-[0.99]"
