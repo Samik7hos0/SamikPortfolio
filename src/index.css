@@ -419,6 +419,20 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   animation: cursorRipple 0.65s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 
+/* Touch taps get a larger, softer ripple than the desktop cursor click. */
+@keyframes touchRipple {
+  0%   { width: 0;     height: 0;     opacity: 0.9; }
+  100% { width: 180px; height: 180px; opacity: 0;   }
+}
+.touch-ripple {
+  border-width: 1.5px;
+  animation: touchRipple 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-ripple, .touch-ripple { animation: none !important; display: none; }
+}
+
 /* ── Neon text ── */
 .neon-green {
   color: #00ffa3;

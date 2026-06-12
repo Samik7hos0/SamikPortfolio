@@ -153,7 +153,6 @@ function MiniPipeline({ nodes, accent }: { nodes: PipeNode[]; accent: string }) 
                 minWidth: 76,
                 background: 'rgba(255,255,255,0.04)',
                 border: `1px solid ${node.color}28`,
-                backdropFilter: 'blur(8px)',
               }}
             >
               <div className="absolute top-0 left-2 right-2 h-[2px] rounded-full" style={{ background: node.color }} />
@@ -189,31 +188,50 @@ function MiniPipeline({ nodes, accent }: { nodes: PipeNode[]; accent: string }) 
 }
 
 function TiltCard({ project, index }: { project: Project; index: number }) {
-  const cardRef = useRef<HTMLAnchorElement>(null)
+  const cardRef  = useRef<HTMLAnchorElement>(null)
+  const shineRef = useRef<HTMLDivElement>(null)
+  const raf      = useRef(0)
+  // Latest pointer position; consumed once per frame to avoid layout thrash
+  const pending  = useRef<{ x: number; y: number } | null>(null)
 
-  const handleMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const card = cardRef.current
-    if (!card) return
-    const rect = card.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width  - 0.5) * 18
-    const y = ((e.clientY - rect.top)  / rect.height - 0.5) * -12
-    card.style.transform = `perspective(1200px) rotateY(${x}deg) rotateX(${y}deg) scale3d(1.015,1.015,1.015)`
-    card.style.boxShadow = `0 40px 100px rgba(0,0,0,0.25), ${project.accent}18 0 0 80px`
-    const shine = card.querySelector<HTMLDivElement>('.card-shine')
-    if (shine) {
-      const px = ((e.clientX - rect.left) / rect.width)  * 100
-      const py = ((e.clientY - rect.top)  / rect.height) * 100
-      shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.05) 0%, transparent 65%)`
-    }
+  // Smaller tilt on touch so a scroll-drag doesn't throw the card around
+  const apply = (clientX: number, clientY: number, touch: boolean) => {
+    pending.current = { x: clientX, y: clientY }
+    if (raf.current) return
+    raf.current = requestAnimationFrame(() => {
+      raf.current = 0
+      const card = cardRef.current
+      const p = pending.current
+      if (!card || !p) return
+      const rect = card.getBoundingClientRect()
+      const range = touch ? 8 : 18
+      const x = ((p.x - rect.left) / rect.width  - 0.5) * range
+      const y = ((p.y - rect.top)  / rect.height - 0.5) * (touch ? -5 : -12)
+      card.style.transform = `perspective(1200px) rotateY(${x}deg) rotateX(${y}deg) scale3d(1.015,1.015,1.015)`
+      card.style.boxShadow = `0 40px 100px rgba(0,0,0,0.25), ${project.accent}18 0 0 80px`
+      const shine = shineRef.current
+      if (shine) {
+        const px = ((p.x - rect.left) / rect.width)  * 100
+        const py = ((p.y - rect.top)  / rect.height) * 100
+        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.05) 0%, transparent 65%)`
+      }
+    })
+  }
+
+  const handleMove  = (e: React.MouseEvent<HTMLAnchorElement>) => apply(e.clientX, e.clientY, false)
+  // Passive: we never preventDefault, so vertical scrolling over the card still works
+  const handleTouch = (e: React.TouchEvent<HTMLAnchorElement>) => {
+    const t = e.touches[0]
+    if (t) apply(t.clientX, t.clientY, true)
   }
 
   const handleLeave = () => {
+    if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0 }
     const card = cardRef.current
     if (!card) return
     card.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale3d(1,1,1)'
     card.style.boxShadow = ''
-    const shine = card.querySelector<HTMLDivElement>('.card-shine')
-    if (shine) shine.style.background = 'none'
+    if (shineRef.current) shineRef.current.style.background = 'none'
   }
 
   return (
@@ -277,13 +295,15 @@ function TiltCard({ project, index }: { project: Project; index: number }) {
         }}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
+        onTouchMove={handleTouch}
+        onTouchEnd={handleLeave}
       >
         <div
           className="relative flex flex-col overflow-hidden"
           style={{ background: '#040f17', minHeight: 260 }}
         >
           {/* Shine layer */}
-          <div className="card-shine absolute inset-0 pointer-events-none z-20" />
+          <div ref={shineRef} className="card-shine absolute inset-0 pointer-events-none z-20" />
 
           {/* Background accent glow */}
           <div

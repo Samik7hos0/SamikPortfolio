@@ -102,9 +102,8 @@ function DesktopPipeline() {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 1.8 + i * 0.1 }}
             className="relative shrink-0 rounded-xl overflow-hidden"
             style={{
-              background: 'rgba(5,14,24,0.75)',
+              background: 'rgba(5,14,24,0.92)',
               border: `1px solid ${stage.color}22`,
-              backdropFilter: 'blur(12px)',
               minWidth: 100,
             }}
           >
@@ -178,9 +177,8 @@ function MobilePipeline() {
           <div
             className="rounded-lg px-2.5 py-1.5 text-center"
             style={{
-              background: 'rgba(5,14,24,0.75)',
+              background: 'rgba(5,14,24,0.92)',
               border: `1px solid ${stage.color}25`,
-              backdropFilter: 'blur(10px)',
             }}
           >
             <p className="font-serif text-[10px] font-semibold" style={{ color: '#F6FCFF' }}>{stage.label}</p>

@@ -90,9 +90,9 @@ export default function FloatingNav() {
             className="relative rounded-[14px]"
             style={{
               pointerEvents: 'auto',
-              backdropFilter: 'blur(32px) saturate(260%)',
-              WebkitBackdropFilter: 'blur(32px) saturate(260%)',
-              background: 'rgba(4,9,18,0.96)',
+              // backdrop-filter removed: the 96%-opaque bg made the blur invisible
+              // while forcing a full-screen backdrop repaint every frame (cursor jank).
+              background: 'rgba(4,9,18,0.97)',
               border: '1px solid rgba(255,255,255,0.06)',
               boxShadow: [
                 '0 0 0 0.5px rgba(0,255,163,0.07)',

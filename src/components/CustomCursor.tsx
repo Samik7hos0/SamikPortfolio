@@ -13,9 +13,11 @@ interface CursorState {
 }
 
 export default function CustomCursor() {
+  const wrapRef  = useRef<HTMLDivElement>(null)
   const dotRef   = useRef<HTMLDivElement>(null)
   const ringRef  = useRef<HTMLDivElement>(null)
   const trailRefs = useRef<(HTMLDivElement | null)[]>([])
+  const visible  = useRef(true)
 
   const target      = useRef({ x: -200, y: -200 })
   const prevTarget  = useRef({ x: -200, y: -200 })
@@ -28,35 +30,37 @@ export default function CustomCursor() {
   const [cs, setCs] = useState<CursorState>(stateRef.current)
 
   useEffect(() => {
+    const SELECTOR = 'a, button, [data-hover], [data-cursor]'
+
     const onMove = (e: MouseEvent) => {
       prevTarget.current = { ...target.current }
       target.current     = { x: e.clientX, y: e.clientY }
+
+      // Hover detection lives here (not on mouseover/mouseout) — those bubble
+      // and fire on every nested child, causing the ring to flicker. We resolve
+      // the interactive ancestor once per move and only re-render on a real change.
+      const interactive = (e.target as HTMLElement).closest(SELECTOR) as HTMLElement | null
+      const s = stateRef.current
+      if (interactive) {
+        const label = interactive.dataset.cursor ?? ''
+        const color = interactive.dataset.cursorColor ?? '#00ffa3'
+        if (!s.hovered || s.label !== label || s.color !== color) {
+          stateRef.current = { ...s, hovered: true, label, color }
+          setCs(stateRef.current)
+        }
+      } else if (s.hovered) {
+        stateRef.current = { ...s, hovered: false, label: '', color: '#00ffa3' }
+        setCs(stateRef.current)
+      }
     }
 
     const onDown = () => {
       stateRef.current = { ...stateRef.current, clicking: true }
-      setCs(s => ({ ...s, clicking: true }))
+      setCs(stateRef.current)
     }
     const onUp = () => {
       stateRef.current = { ...stateRef.current, clicking: false }
-      setCs(s => ({ ...s, clicking: false }))
-    }
-
-    const onOver = (e: MouseEvent) => {
-      const el          = e.target as HTMLElement
-      const interactive = el.closest('a, button, [data-hover], [data-cursor]') as HTMLElement | null
-      if (!interactive) return
-      const label = interactive.dataset?.cursor ?? ''
-      const color = interactive.dataset?.cursorColor ?? '#00ffa3'
-      stateRef.current = { ...stateRef.current, hovered: true, label, color }
-      setCs(s => ({ ...s, hovered: true, label, color }))
-    }
-
-    const onOut = (e: MouseEvent) => {
-      const el = e.target as HTMLElement
-      if (!el.closest('a, button, [data-hover], [data-cursor]')) return
-      stateRef.current = { ...stateRef.current, hovered: false, label: '', color: '#00ffa3' }
-      setCs(s => ({ ...s, hovered: false, label: '', color: '#00ffa3' }))
+      setCs(stateRef.current)
     }
 
     // Pure-DOM ripple — zero React overhead
@@ -68,20 +72,29 @@ export default function CustomCursor() {
       setTimeout(() => r.remove(), 750)
     }
 
+    // Fade the whole cursor out when the pointer leaves the window so it never
+    // freezes stranded at an edge; restore on re-entry.
+    const onLeave = () => { visible.current = false }
+    const onEnter = () => { visible.current = true }
+
     window.addEventListener('mousemove', onMove, { passive: true })
     window.addEventListener('mousedown', onDown)
     window.addEventListener('mouseup',   onUp)
     window.addEventListener('click',     onClick)
-    document.addEventListener('mouseover', onOver)
-    document.addEventListener('mouseout',  onOut)
+    document.documentElement.addEventListener('mouseleave', onLeave)
+    document.documentElement.addEventListener('mouseenter', onEnter)
 
     const tick = () => {
       const { hovered, clicking } = stateRef.current
 
-      dotPos.current.x  = lerp(dotPos.current.x,  target.current.x, 0.2)
-      dotPos.current.y  = lerp(dotPos.current.y,  target.current.y, 0.2)
-      ringPos.current.x = lerp(ringPos.current.x, target.current.x, 0.1)
-      ringPos.current.y = lerp(ringPos.current.y, target.current.y, 0.1)
+      if (wrapRef.current) wrapRef.current.style.opacity = visible.current ? '1' : '0'
+
+      // Dot tracks the pointer almost 1:1 so it never feels laggy; the ring
+      // and trail keep a softer follow for the comet effect.
+      dotPos.current.x  = lerp(dotPos.current.x,  target.current.x, 0.45)
+      dotPos.current.y  = lerp(dotPos.current.y,  target.current.y, 0.45)
+      ringPos.current.x = lerp(ringPos.current.x, target.current.x, 0.24)
+      ringPos.current.y = lerp(ringPos.current.y, target.current.y, 0.24)
 
       // Velocity-based ring stretch in direction of movement
       const vx     = target.current.x - prevTarget.current.x
@@ -90,18 +103,18 @@ export default function CustomCursor() {
       const angle  = Math.atan2(vy, vx) * (180 / Math.PI)
       const str    = Math.min(speed * 0.035, 0.28)
 
+      // Positioning is done with translate3d (GPU compositor) instead of
+      // left/top — animating left/top forces layout+paint every frame on all
+      // 7 shadowed elements, which is what was freezing the cursor under load.
       if (dotRef.current) {
-        dotRef.current.style.left = dotPos.current.x + 'px'
-        dotRef.current.style.top  = dotPos.current.y + 'px'
+        dotRef.current.style.transform = `translate3d(${dotPos.current.x}px, ${dotPos.current.y}px, 0) translate(-50%,-50%)`
       }
       if (ringRef.current) {
-        ringRef.current.style.left = ringPos.current.x + 'px'
-        ringRef.current.style.top  = ringPos.current.y + 'px'
+        let t = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0) translate(-50%,-50%)`
         if (!hovered && !clicking && speed > 1.5) {
-          ringRef.current.style.transform = `translate(-50%,-50%) rotate(${angle}deg) scaleX(${1 + str}) scaleY(${1 - str * 0.5})`
-        } else {
-          ringRef.current.style.transform = 'translate(-50%,-50%)'
+          t += ` rotate(${angle}deg) scaleX(${1 + str}) scaleY(${1 - str * 0.5})`
         }
+        ringRef.current.style.transform = t
       }
 
       // Trail particles
@@ -111,9 +124,11 @@ export default function CustomCursor() {
         pos.y = lerp(pos.y, src.y, TRAIL_LAGS[i])
         const el = trailRefs.current[i]
         if (el) {
-          el.style.left    = pos.x + 'px'
-          el.style.top     = pos.y + 'px'
-          el.style.opacity = (hovered ? 0 : (TRAIL_COUNT - i) / TRAIL_COUNT * 0.5).toString()
+          el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%,-50%)`
+          // Keep the comet alive over interactive elements — just dim it so it
+          // doesn't fight the expanded ring/label. (Was 0 → looked like it died.)
+          const base = (TRAIL_COUNT - i) / TRAIL_COUNT * 0.5
+          el.style.opacity = (hovered ? base * 0.45 : base).toString()
         }
       })
 
@@ -126,24 +141,26 @@ export default function CustomCursor() {
       window.removeEventListener('mousedown', onDown)
       window.removeEventListener('mouseup',   onUp)
       window.removeEventListener('click',     onClick)
-      document.removeEventListener('mouseover', onOver)
-      document.removeEventListener('mouseout',  onOut)
+      document.documentElement.removeEventListener('mouseleave', onLeave)
+      document.documentElement.removeEventListener('mouseenter', onEnter)
       cancelAnimationFrame(raf.current)
     }
   }, [])
 
   const { hovered, clicking, label, color } = cs
-  const dotSize  = hovered ? 0 : clicking ? 4 : 8
+  // Hide the dot only when a label occupies the ring; otherwise it stays visible
+  // so there's always a green point following the pointer.
+  const dotSize  = label ? 0 : clicking ? 4 : 8
   const ringSize = label ? 74 : hovered ? 58 : clicking ? 26 : 40
 
   return (
-    <>
+    <div ref={wrapRef} style={{ transition: 'opacity 0.25s ease', pointerEvents: 'none' }}>
       {/* Trail */}
       {Array.from({ length: TRAIL_COUNT }, (_, i) => (
         <div
           key={i}
           ref={el => { trailRefs.current[i] = el }}
-          className="fixed pointer-events-none z-[9996] rounded-full -translate-x-1/2 -translate-y-1/2"
+          className="fixed pointer-events-none z-[9996] rounded-full"
           style={{
             width:      TRAIL_SIZES[i],
             height:     TRAIL_SIZES[i],
@@ -151,6 +168,7 @@ export default function CustomCursor() {
             opacity:    0,
             top:  0,
             left: 0,
+            willChange: 'transform, opacity',
             transition: 'opacity 0.18s ease, background 0.2s ease',
           }}
         />
@@ -159,7 +177,7 @@ export default function CustomCursor() {
       {/* Dot */}
       <div
         ref={dotRef}
-        className="fixed pointer-events-none z-[9999] rounded-full -translate-x-1/2 -translate-y-1/2"
+        className="fixed pointer-events-none z-[9999] rounded-full"
         style={{
           width:     dotSize,
           height:    dotSize,
@@ -168,6 +186,7 @@ export default function CustomCursor() {
           transition: 'width 0.15s ease, height 0.15s ease, background 0.2s ease, box-shadow 0.2s ease',
           top:  0,
           left: 0,
+          willChange: 'transform',
         }}
       />
 
@@ -178,7 +197,8 @@ export default function CustomCursor() {
         style={{
           width:     ringSize,
           height:    ringSize,
-          transform: 'translate(-50%,-50%)',
+          transform: 'translate3d(-200px,-200px,0) translate(-50%,-50%)',
+          willChange: 'transform',
           border:    `1.5px solid ${hovered ? color : `${color}70`}`,
           background: label ? `${color}0c` : 'transparent',
           boxShadow:  hovered
@@ -204,6 +224,6 @@ export default function CustomCursor() {
           </span>
         )}
       </div>
-    </>
+    </div>
   )
 }

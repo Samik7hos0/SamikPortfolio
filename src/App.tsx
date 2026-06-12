@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, AnimatePresence, MotionConfig } from '
 import { ThemeProvider } from './context/ThemeContext'
 import { useLenis } from './hooks/useLenis'
 import { useKeyNav } from './hooks/useKeyNav'
+import { useTouchInteractions } from './hooks/useTouchInteractions'
 import StatementSection from './components/StatementSection'
 import LookingForSection from './components/LookingForSection'
 import BuildNotesCarousel from './components/BuildNotesCarousel'
@@ -65,16 +66,23 @@ function StatCounter({ value, suffix = '', label }: { value: number; suffix?: st
 function HeroSection() {
   const heroRef  = useRef<HTMLElement>(null)
   const glowRef  = useRef<HTMLDivElement>(null)
+  const glowRaf  = useRef(0)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
 
-  // Ambient glow follows mouse — direct DOM update, no state
+  // Ambient glow follows mouse — direct DOM update, rAF-throttled so the
+  // full-section gradient repaint happens at most once per frame.
   const onHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!glowRef.current) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width)  * 100
     const y = ((e.clientY - rect.top)  / rect.height) * 100
-    glowRef.current.style.background = `radial-gradient(ellipse 640px 420px at ${x}% ${y}%, rgba(0,255,163,0.065) 0%, transparent 60%)`
+    if (glowRaf.current) return
+    glowRaf.current = requestAnimationFrame(() => {
+      glowRaf.current = 0
+      if (glowRef.current) {
+        glowRef.current.style.background = `radial-gradient(ellipse 640px 420px at ${x}% ${y}%, rgba(0,255,163,0.065) 0%, transparent 60%)`
+      }
+    })
   }
 
   const [typed, setTyped] = useState('')
@@ -307,6 +315,7 @@ export default function App() {
   const [touch] = useState(isTouchDevice)
   useLenis()
   useKeyNav()
+  useTouchInteractions()
 
   return (
     <ThemeProvider>

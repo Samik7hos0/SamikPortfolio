@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { haptic } from '../utils/haptics'
 
 interface Note {
   text: string
@@ -93,6 +94,7 @@ export default function BuildNotesCarousel() {
     if (touchStartX.current === null) return
     const dx = e.changedTouches[0].clientX - touchStartX.current
     if (Math.abs(dx) > 40) {
+      haptic(12) // confirm the swipe landed
       dx < 0 ? next() : prev()
     }
     touchStartX.current = null
